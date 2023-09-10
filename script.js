@@ -30,7 +30,6 @@ class Lift {
         this.box = new LiftBox(id);
     }
     move(newFloor) {
-        console.log("Moving lift " + this.id + " from floor " + this.currentFloor.floorNumber + " to floor " + newFloor.floorNumber);
         this.liftStatus = "moving";
         var speed = newFloor.floorNumber > this.currentFloor.floorNumber ? 1 : -1;
         var lift = this;
@@ -39,20 +38,20 @@ class Lift {
     updateBoxPosition(speed, targetFloor) {
         this.box.yPosition += speed;
         if(targetFloor.yPosition == this.box.yPosition) {
-            console.log("Clearing interval");
+            // console.log("Clearing interval");
             clearInterval(this.interval);
-            this.liftStatus = "idle";
+            this.liftStatus = "idle"; // Need to decide where to set the lift to idle.
             this.currentFloor = targetFloor;
-            console.log("Lift reached floor " + targetFloor.floorNumber);
-            setTimeout(() => this.openDoor(), 500);
+            console.log(new Date().getTime() + ": Lift " + this.id + " reached floor " + targetFloor.floorNumber);
+            setTimeout(() => this.openDoor(targetFloor.floorNumber), 500);
         }
     }
-    openDoor() {
+    openDoor(floor) {
         if(this.liftStatus != "idle") {
-            console.log("Lift is moving. Cannot open door");
+            console.log(new Date().getTime() + ": Lift " + this.id + " is moving towards " + floor + "Cannot open door");
             return;
         }
-        console.log("Opening door");
+        console.log(new Date().getTime() + ": Opening door of lift " + this.id + " at floor " + this.currentFloor.floorNumber);
         this.doorStatus = "open";
     }
     closeDoor() {
@@ -89,49 +88,57 @@ class Floor {
         this.yPosition = (floorNumber) * 100;
     }
     callLift() {
-        console.log("Calling lift");
+        // console.log("Calling lift");
         var requestSourceFloor = this;
         addRequestToQueue(requestSourceFloor);
     }
 }
 
 function addRequestToQueue(requestSourceFloor) {
-    console.log("Adding request to queue");
+    // console.log("Adding request to queue");
     requestQueue.push(requestSourceFloor);
     processTheEntries();
 }
 
 function processTheEntries() {
     if(schedulerStatus == "idle") {
-        console.log("Total requests in queue: " + requestQueue.length);
+        // console.log("Total requests in queue: " + requestQueue.length);
         schedulerStatus = "busy";
         while(requestQueue.length > 0) {
             var requestFloor = requestQueue.shift();
-            console.log("Processing request for floor " + requestFloor.floorNumber);
-            var nearestLift = findNearestLift(requestFloor);
-            nearestLift.move(requestFloor);
+            // console.log("Processing request for floor " + requestFloor.floorNumber);
+            findNearestLift(requestFloor, function(nearestLift) {
+                console.log(new Date().getTime() + ": Nearest Lift to floor " + requestFloor.floorNumber + " is ", nearestLift.id);
+                nearestLift.move(requestFloor);
+            });
         }
         schedulerStatus = "idle";
     }
 }
 
-function findNearestLift(requestFloor) {
-    console.log(liftList);
-    var nearestLift = null;
-    var minDistance = floorList.length;
-    for(var i=0; i<liftList.length; i++) {
-        if(liftList[i].liftStatus == "idle") {
-            var distance = Math.abs(requestFloor.floorNumber - liftList[i].currentFloor.floorNumber);
-            if(distance < minDistance) {
-                minDistance = distance;
-                nearestLift = liftList[i];
-            }
-        } else {
-            console.log("Lift " + liftList[i].id + " is moving");
-        }
+function findNearestLift(requestFloor, callback) {
+  // console.log(liftList);
+  var nearestLift = null;
+  var minDistance = floorList.length;
+  
+  for (var i = 0; i < liftList.length; i++) {
+    if (liftList[i].liftStatus == "idle") {
+      var distance = Math.abs(requestFloor.floorNumber - liftList[i].currentFloor.floorNumber);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestLift = liftList[i];
+      }
     }
-    console.log("Nearest lift is " + nearestLift.id);
-    return nearestLift;
+  }
+
+  if (nearestLift !== null) {
+    callback(nearestLift);
+  } else {
+    console.log(new Date().getTime() + ": No idle lift found for floor " + requestFloor.floorNumber + ". Waiting for 2 secs to check again");
+    setTimeout(() => {
+      findNearestLift(requestFloor, callback);
+    }, 2000);
+  }
 }
 
 function addNewLift() {
