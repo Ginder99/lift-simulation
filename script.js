@@ -3,11 +3,74 @@ var liftList = [];
 var floorList = [];
 var schedulerStatus = "idle";
 
+
+var liftXOrigin = 50;
+var bHeight = 800;
+var bWidth = 600;
+var xOrigin = 20;
+var yOrigin = -40;
+
+var myBuilding = {
+    canvas : document.createElement("canvas"),
+    build : function() {
+        this.canvas.width = bWidth;
+        this.canvas.height = bHeight;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        this.interval = setInterval(updateCanvas, 30);
+    },
+    stop : function() {
+        clearInterval(this.interval);
+    },    
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+}
+
+function updateCanvas() {
+    myBuilding.clear();
+    for(var i=0; i<floorList.length; i++) {
+        floorList[i].drawFloor();
+    }
+    for(var i=0; i<liftList.length; i++) {
+        liftList[i].box.update();
+    }
+}
+
+
+class LiftBox {
+    liftId;
+    xPosition;
+    yPosition;
+    height;
+    width;
+    ctx;
+    constructor(liftId, height, width) {
+        this.liftId = liftId;
+        this.height = height;
+        this.width = width;
+        this.yPosition = yOrigin + bHeight;
+        this.xPosition = liftXOrigin + (liftId * 100);
+    }
+    update() {
+        var ctx = myBuilding.context;
+        ctx.save();
+        ctx.translate(this.xPosition, this.yPosition);
+        ctx.fillStyle = "blue";
+        ctx.fillRect(this.width / -2, this.height / -2, this.width, this.height);        
+        ctx.restore();  
+    }
+}
+
 function initializeSimulator() {
+    myBuilding.build();
     console.log("Initializing simulator");
     var floorCount = document.getElementById("floorCount").value;
     for(var i=0; i<floorCount; i++) {
-        floorList.push(new Floor(i));
+        var floor = new Floor(i);
+        floor.drawFloor();
+        floorList.push(floor);
     }
     var liftCount = document.getElementById("liftCount").value;
     for(var i=0; i<liftCount; i++) {
@@ -27,16 +90,14 @@ class Lift {
         this.liftStatus = "idle";
         this.currentFloor = floorList[0];
         this.doorStatus = "closed";
-        this.box = new LiftBox(id);
+        this.box = new LiftBox(id, 50, 25);
     }
     move(newFloor) {
         this.liftStatus = "moving";
-        var speed = newFloor.floorNumber > this.currentFloor.floorNumber ? 1 : -1;
-        var lift = this;
-        this.interval = setInterval(() => this.updateBoxPosition(speed, newFloor), 40);
+        var speed = newFloor.floorNumber > this.currentFloor.floorNumber ? -1 : 1;
+        this.interval = setInterval(() => this.updateBoxPosition(speed, newFloor), 20);
     }
     updateBoxPosition(speed, targetFloor) {
-        this.box.yPosition += speed;
         if(targetFloor.yPosition == this.box.yPosition) {
             // console.log("Clearing interval");
             clearInterval(this.interval);
@@ -44,6 +105,8 @@ class Lift {
             this.currentFloor = targetFloor;
             console.log(new Date().getTime() + ": Lift " + this.id + " reached floor " + targetFloor.floorNumber);
             setTimeout(() => this.openDoor(targetFloor.floorNumber), 500);
+        } else {
+            this.box.yPosition += speed;
         }
     }
     openDoor(floor) {
@@ -60,37 +123,54 @@ class Lift {
     }
 }
 
-class LiftBox {
-    liftId;
-    xPosition;
-    yPosition;
-    height;
-    width;
-    constructor(liftId) {
-        this.liftId = liftId;
-        this.yPosition = 0;
-        this.xPosition = liftId * 100;
-    }
-}
-
 class LiftRequest {
     requestFloor;
     requestDirection;
 }
-
+class Button {
+    xPosition;
+    yPosition;
+    width;
+    height;
+    constructor(x, y, w, h) {
+        this.xPosition = x;
+        this.yPosition = y;
+        this.width = w;
+        this.height = h;
+    }
+    drawButtons(xfloorOffset, yfloorOffset) {
+        var ctx = myBuilding.context;
+        ctx.save();
+        ctx.translate(xfloorOffset, yfloorOffset);
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(this.xPosition, this.yPosition, this.width, this.height);
+        ctx.restore(); 
+    }
+}
 class Floor {
     floorNumber;
-    //upButton;
-    //downButton;
+    upButton;
+    downButton;
     yPosition;
     constructor(floorNumber) {
         this.floorNumber = floorNumber;
-        this.yPosition = (floorNumber) * 100;
+        this.yPosition = yOrigin + bHeight - (floorNumber) * 100;
+        this.upButton = new Button(0, this.yPosition, 20, 10);
+        this.downButton = new Button(0, this.yPosition + 15, 20, 10);
     }
     callLift() {
         // console.log("Calling lift");
         var requestSourceFloor = this;
         addRequestToQueue(requestSourceFloor);
+    }
+    drawFloor() {
+        var ctx = myBuilding.context;
+        ctx.save();
+        ctx.translate(0, this.yPosition - yOrigin);
+        ctx.fillRect(1/-2, 1 / -2, bWidth-30, 1);
+        ctx.restore();
+        this.upButton.drawButtons(10, -15);
+        this.downButton.drawButtons(10, -15);
     }
 }
 
@@ -122,7 +202,7 @@ function findNearestLift(requestFloor, callback) {
   var minDistance = floorList.length;
   
   for (var i = 0; i < liftList.length; i++) {
-    if (liftList[i].liftStatus == "idle") {
+    if (liftList[i].liftStatus == "idle" && liftList[i].currentFloor.floorNumber!=requestFloor.floorNumber) {
       var distance = Math.abs(requestFloor.floorNumber - liftList[i].currentFloor.floorNumber);
       if (distance < minDistance) {
         minDistance = distance;
