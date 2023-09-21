@@ -1,13 +1,33 @@
-var requestQueue = [];
-var liftList = [];
-var floorList = [];
-var schedulerStatus = "idle";
+var requestQueue;
+var liftList;
+var floorList;
+var schedulerStatus;
+var building;
+var inputDiv;
 
 function initializeSimulator() {
     console.log("Initializing simulator");
-    var floorCount = document.getElementById("floorCount").value;
-    for(var i=0; i<floorCount; i++) {
-        floorList.push(new Floor(i));
+    requestQueue = [];
+    liftList = [];
+    floorList = [];
+    schedulerStatus = "idle";
+    building = document.getElementById("building");
+    inputDiv = document.getElementById("input");
+    inputDiv.style.display = "none";
+    building = document.getElementById("building");
+    var floorCount = parseInt(document.getElementById("floorCount").value);
+    for(var i=floorCount-1; i>=0; i--) {
+        var upBtn = document.createElement('button');
+        upBtn.innerHTML = "Up";
+        var downBtn = document.createElement('button');
+        downBtn.innerHTML = "Down";
+        if(i==0) {
+            addFloor(i, upBtn, null);
+        } else if (i==floorCount-1) {
+            addFloor(i, null, downBtn);
+        } else {
+            addFloor(i, upBtn, downBtn);
+        }
     }
     var liftCount = document.getElementById("liftCount").value;
     for(var i=0; i<liftCount; i++) {
@@ -32,11 +52,9 @@ class Lift {
     move(newFloor) {
         this.liftStatus = "moving";
         var speed = newFloor.floorNumber > this.currentFloor.floorNumber ? 1 : -1;
-        var lift = this;
         this.interval = setInterval(() => this.updateBoxPosition(speed, newFloor), 40);
     }
     updateBoxPosition(speed, targetFloor) {
-        this.box.yPosition += speed;
         if(targetFloor.yPosition == this.box.yPosition) {
             // console.log("Clearing interval");
             clearInterval(this.interval);
@@ -44,6 +62,8 @@ class Lift {
             this.currentFloor = targetFloor;
             console.log(new Date().getTime() + ": Lift " + this.id + " reached floor " + targetFloor.floorNumber);
             setTimeout(() => this.openDoor(targetFloor.floorNumber), 500);
+        } else {
+            this.box.yPosition += speed;
         }
     }
     openDoor(floor) {
@@ -53,6 +73,7 @@ class Lift {
         }
         console.log(new Date().getTime() + ": Opening door of lift " + this.id + " at floor " + this.currentFloor.floorNumber);
         this.doorStatus = "open";
+        setTimeout(() => this.closeDoor(), 2500);
     }
     closeDoor() {
         console.log("Closing door");
@@ -80,17 +101,33 @@ class LiftRequest {
 
 class Floor {
     floorNumber;
-    //upButton;
-    //downButton;
+    upButton;
+    downButton;
     yPosition;
-    constructor(floorNumber) {
+    floorDiv;
+    constructor(floorNumber, upBtnDiv, downBtnDiv) {
         this.floorNumber = floorNumber;
         this.yPosition = (floorNumber) * 100;
+        var newDiv = document.createElement('div');
+        newDiv.setAttribute("class", "floor");
+        var floorNum = document.createElement('p');
+        floorNum.innerHTML = "Floor " + floorNumber;
+        newDiv.append(floorNum);
+        if(upBtnDiv!=null) {
+            this.upButton = upBtnDiv;
+            this.upButton.addEventListener('click', () => this.callLift());
+            newDiv.append(upBtnDiv);
+        }
+        if(downBtnDiv!=null) {
+            this.downButton = downBtnDiv;
+            this.downButton.addEventListener('click', () => this.callLift());
+            newDiv.append(downBtnDiv);
+        }
+        this.floorDiv = newDiv;
     }
     callLift() {
         // console.log("Calling lift");
-        var requestSourceFloor = this;
-        addRequestToQueue(requestSourceFloor);
+        addRequestToQueue(this);
     }
 }
 
@@ -120,7 +157,6 @@ function findNearestLift(requestFloor, callback) {
   // console.log(liftList);
   var nearestLift = null;
   var minDistance = floorList.length;
-  
   for (var i = 0; i < liftList.length; i++) {
     if (liftList[i].liftStatus == "idle") {
       var distance = Math.abs(requestFloor.floorNumber - liftList[i].currentFloor.floorNumber);
@@ -141,10 +177,9 @@ function findNearestLift(requestFloor, callback) {
   }
 }
 
-function addNewLift() {
-    liftList.push(new Lift(liftList.length+1));
-}
-
-function addNewFloor() {
-    floorList.push(new Floor(floorList.length+1));
+function addFloor(floorNumber, upBtn, downBtn) {
+    var floor = new Floor(floorNumber, upBtn, downBtn);
+    floorList.unshift(floor);
+    building.append(floor.floorDiv);
+    return floor;
 }
