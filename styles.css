@@ -1,6 +1,31 @@
-.floor{
+.floor {
     display:flex;
+    border-top: 1px solid black;
+    width: auto;
+    height: 100px;
+}
+
+.liftBox {
     border: 1px solid black;
-    width:63rem;
-    height: 6.23rem;
+    position: relative;
+    width: 56px;
+    height: 98px;
+    margin: auto;
+}
+
+.leftDoor {
+    position: absolute;
+    border: 0.5px solid grey;
+    background-color: burlywood;
+    width: 26.5px;
+    height: 97px;
+}
+
+.rightDoor {
+    left: 28.5px;
+    position: absolute;
+    border: 0.5px solid grey;
+    background-color: burlywood;
+    width: 26.5px;
+    height: 97px;
 }

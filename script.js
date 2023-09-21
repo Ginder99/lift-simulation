@@ -41,43 +41,51 @@ class Lift {
     currentFloor;
     doorStatus;
     box;
-    interval;
+    liftInterval;
     constructor(id) {
         this.id = id;
         this.liftStatus = "idle";
         this.currentFloor = floorList[0];
         this.doorStatus = "closed";
         this.box = new LiftBox(id);
+        floorList[0].floorDiv.append(this.box.liftBoxDiv);
     }
     move(newFloor) {
         this.liftStatus = "moving";
         var speed = newFloor.floorNumber > this.currentFloor.floorNumber ? 1 : -1;
-        this.interval = setInterval(() => this.updateBoxPosition(speed, newFloor), 40);
+        this.liftInterval = setInterval(() => this.updateBoxPosition(speed, newFloor), 5);
     }
     updateBoxPosition(speed, targetFloor) {
         if(targetFloor.yPosition == this.box.yPosition) {
             // console.log("Clearing interval");
-            clearInterval(this.interval);
-            this.liftStatus = "idle"; // Need to decide where to set the lift to idle.
+            clearInterval(this.liftInterval);
             this.currentFloor = targetFloor;
             console.log(new Date().getTime() + ": Lift " + this.id + " reached floor " + targetFloor.floorNumber);
+            this.liftStatus = "stopped";
             setTimeout(() => this.openDoor(targetFloor.floorNumber), 500);
         } else {
             this.box.yPosition += speed;
+            this.box.liftBoxDiv.style.top = - (this.box.yPosition + (this.box.yPosition/100)) + "px";
         }
     }
     openDoor(floor) {
-        if(this.liftStatus != "idle") {
+        if(this.liftStatus == "moving") {
             console.log(new Date().getTime() + ": Lift " + this.id + " is moving towards " + floor + "Cannot open door");
             return;
         }
         console.log(new Date().getTime() + ": Opening door of lift " + this.id + " at floor " + this.currentFloor.floorNumber);
         this.doorStatus = "open";
+        // TODO Opening door animation
         setTimeout(() => this.closeDoor(), 2500);
+        setTimeout(() => this.idle(), 5000);
     }
     closeDoor() {
-        console.log("Closing door");
+        console.log(new Date().getTime() + ": Closing door");
+        // TODO Closing door animation
         this.doorStatus = "closed";
+    }
+    idle() {
+        this.liftStatus = "idle";
     }
 }
 
@@ -87,9 +95,18 @@ class LiftBox {
     yPosition;
     height;
     width;
+    liftBoxDiv;
     constructor(liftId) {
         this.liftId = liftId;
         this.yPosition = 0;
+        var boxDiv = document.createElement('div');
+        boxDiv.setAttribute("class", "liftBox");
+        var leftDoor = document.createElement('div');
+        var rightDoor = document.createElement('div');
+        leftDoor.setAttribute("class", "leftDoor");
+        rightDoor.setAttribute("class", "rightDoor");
+        boxDiv.append(leftDoor, rightDoor);
+        this.liftBoxDiv = boxDiv;
         this.xPosition = liftId * 100;
     }
 }
