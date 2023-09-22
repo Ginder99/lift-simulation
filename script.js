@@ -18,9 +18,11 @@ function initializeSimulator() {
     var floorCount = parseInt(document.getElementById("floorCount").value);
     for(var i=floorCount-1; i>=0; i--) {
         var upBtn = document.createElement('button');
-        upBtn.innerHTML = "Up";
+        upBtn.setAttribute("class", "liftBtn");
+        upBtn.innerHTML = "<";
         var downBtn = document.createElement('button');
-        downBtn.innerHTML = "Down";
+        downBtn.setAttribute("class", "liftBtn");
+        downBtn.innerHTML = ">";
         if(i==0) {
             addFloor(i, upBtn, null);
         } else if (i==floorCount-1) {
@@ -141,25 +143,29 @@ class Floor {
     downButton;
     yPosition;
     floorDiv;
-    constructor(floorNumber, upBtnDiv, downBtnDiv) {
+    constructor(floorNumber, upBtn, downBtn) {
         this.floorNumber = floorNumber;
         this.yPosition = (floorNumber) * 100;
-        var newDiv = document.createElement('div');
-        newDiv.setAttribute("class", "floor");
-        var floorNum = document.createElement('p');
-        floorNum.innerHTML = "Floor " + floorNumber;
-        newDiv.append(floorNum);
-        if(upBtnDiv!=null) {
-            this.upButton = upBtnDiv;
+        this.floorDiv = document.createElement('div');
+        this.floorDiv.setAttribute("class", "floor");
+        var flrInfoDiv = document.createElement('div');
+        var floorNumDiv = document.createElement('div');
+        floorNumDiv.innerHTML = floorNumber;
+        var btnsDiv = document.createElement('div');
+        btnsDiv.setAttribute("class", "btns");
+        if(upBtn!=null) {
+            this.upButton = upBtn;
             this.upButton.addEventListener('click', () => this.callLift());
-            newDiv.append(upBtnDiv);
+            btnsDiv.append(upBtn);
         }
-        if(downBtnDiv!=null) {
-            this.downButton = downBtnDiv;
+        if(downBtn!=null) {
+            this.downButton = downBtn;
             this.downButton.addEventListener('click', () => this.callLift());
-            newDiv.append(downBtnDiv);
+            btnsDiv.append(downBtn);
         }
-        this.floorDiv = newDiv;
+        flrInfoDiv.append(floorNumDiv   );
+        flrInfoDiv.append(btnsDiv);
+        this.floorDiv.append(flrInfoDiv);
     }
     callLift() {
         // console.log("Calling lift");

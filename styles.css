@@ -1,7 +1,14 @@
+.input {
+    left: 40%;
+    position: absolute;
+    align-items: center;
+    align-content: center;
+}
+
 .floor {
     display:flex;
     border-top: 1px solid black;
-    width: auto;
+    width: 1000px;
     height: 100px;
 }
 
@@ -28,4 +35,13 @@
     background-color: burlywood;
     width: 26.5px;
     height: 97px;
+}
+
+.liftBtn {
+    width: 10px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    rotate: 90deg;
 }
