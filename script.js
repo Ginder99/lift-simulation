@@ -13,9 +13,14 @@ function initializeSimulator() {
     schedulerStatus = "idle";
     building = document.getElementById("building");
     inputDiv = document.getElementById("input");
-    inputDiv.style.display = "none";
     building = document.getElementById("building");
-    var floorCount = parseInt(document.getElementById("floorCount").value);
+    var floorCount = document.getElementById("floorCount").value;
+    var liftCount = document.getElementById("liftCount").value;
+    if(floorCount=='' || liftCount == '') {
+        alert("Please specify no. of lifts and floors.");
+        return;
+    }
+    inputDiv.style.display = "none";
     for(var i=floorCount-1; i>=0; i--) {
         var upBtn = document.createElement('button');
         upBtn.setAttribute("class", "liftBtn");
@@ -31,20 +36,12 @@ function initializeSimulator() {
             addFloor(i, upBtn, downBtn);
         }
     }
-    var liftCount = document.getElementById("liftCount").value;
     for(var i=0; i<liftCount; i++) {
         liftList.push(new Lift(i));
     }
 }
 
 class Lift {
-    id;
-    liftStatus;
-    currentFloor;
-    doorStatus;
-    box;
-    liftInterval;
-    doorsInterval;
     constructor(id) {
         this.id = id;
         this.liftStatus = "idle";
@@ -60,10 +57,9 @@ class Lift {
     }
     updateBoxPosition(speed, targetFloor) {
         if(targetFloor.yPosition == this.box.yPosition) {
-            // console.log("Clearing interval");
             clearInterval(this.liftInterval);
             this.currentFloor = targetFloor;
-            console.log(new Date().getTime() + ": Lift " + this.id + " reached floor " + targetFloor.floorNumber);
+            // console.log(new Date().getTime() + ": Lift " + this.id + " reached floor " + targetFloor.floorNumber);
             this.liftStatus = "stopped";
             setTimeout(() => this.openDoor(targetFloor.floorNumber), 500);
         } else {
@@ -73,22 +69,22 @@ class Lift {
     }
     openDoor(floor) {
         if(this.liftStatus == "moving") {
-            console.log(new Date().getTime() + ": Lift " + this.id + " is moving towards " + floor + "Cannot open door");
+            // console.log(new Date().getTime() + ": Lift " + this.id + " is moving towards " + floor + "Cannot open door");
             return;
         }
-        console.log(new Date().getTime() + ": Opening door of lift " + this.id + " at floor " + this.currentFloor.floorNumber);
+        // console.log(new Date().getTime() + ": Opening door of lift " + this.id + " at floor " + this.currentFloor.floorNumber);
         this.doorStatus = "open";
         this.doorsInterval = setInterval(() => this.updateDoorPositions(-1, 0), 30);
         setTimeout(() => this.closeDoor(), 3500);
         setTimeout(() => this.idle(), 5500);
     }
     closeDoor() {
-        console.log(new Date().getTime() + ": Closing door");
+        // console.log(new Date().getTime() + ": Closing door");
         this.doorStatus = "closed";
         this.doorsInterval = setInterval(() => this.updateDoorPositions(1, 26.5), 30);
     }
     idle() {
-        console.log(new Date().getTime() + ": Going Idle");
+        // console.log(new Date().getTime() + ": Going Idle");
         this.liftStatus = "idle";
     }
     updateDoorPositions(speed, target) {
@@ -168,26 +164,22 @@ class Floor {
         this.floorDiv.append(flrInfoDiv);
     }
     callLift() {
-        // console.log("Calling lift");
         addRequestToQueue(this);
     }
 }
 
 function addRequestToQueue(requestSourceFloor) {
-    // console.log("Adding request to queue");
     requestQueue.push(requestSourceFloor);
     processTheEntries();
 }
 
 function processTheEntries() {
     if(schedulerStatus == "idle") {
-        // console.log("Total requests in queue: " + requestQueue.length);
         schedulerStatus = "busy";
         while(requestQueue.length > 0) {
             var requestFloor = requestQueue.shift();
-            // console.log("Processing request for floor " + requestFloor.floorNumber);
             findNearestLift(requestFloor, function(nearestLift) {
-                console.log(new Date().getTime() + ": Nearest Lift to floor " + requestFloor.floorNumber + " is ", nearestLift.id);
+                // console.log(new Date().getTime() + ": Nearest Lift to floor " + requestFloor.floorNumber + " is ", nearestLift.id);
                 nearestLift.move(requestFloor);
             });
         }
@@ -196,7 +188,6 @@ function processTheEntries() {
 }
 
 function findNearestLift(requestFloor, callback) {
-  // console.log(liftList);
   var nearestLift = null;
   var minDistance = floorList.length;
   for (var i = 0; i < liftList.length; i++) {
@@ -212,7 +203,7 @@ function findNearestLift(requestFloor, callback) {
   if (nearestLift !== null) {
     callback(nearestLift);
   } else {
-    console.log(new Date().getTime() + ": No idle lift found for floor " + requestFloor.floorNumber + ". Waiting for 2 secs to check again");
+    // console.log(new Date().getTime() + ": No idle lift found for floor " + requestFloor.floorNumber + ". Waiting for 2 secs to check again");
     setTimeout(() => {
       findNearestLift(requestFloor, callback);
     }, 2000);
