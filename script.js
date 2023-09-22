@@ -42,6 +42,7 @@ class Lift {
     doorStatus;
     box;
     liftInterval;
+    doorsInterval;
     constructor(id) {
         this.id = id;
         this.liftStatus = "idle";
@@ -53,7 +54,7 @@ class Lift {
     move(newFloor) {
         this.liftStatus = "moving";
         var speed = newFloor.floorNumber > this.currentFloor.floorNumber ? 1 : -1;
-        this.liftInterval = setInterval(() => this.updateBoxPosition(speed, newFloor), 5);
+        this.liftInterval = setInterval(() => this.updateBoxPosition(speed, newFloor), 20);
     }
     updateBoxPosition(speed, targetFloor) {
         if(targetFloor.yPosition == this.box.yPosition) {
@@ -75,17 +76,32 @@ class Lift {
         }
         console.log(new Date().getTime() + ": Opening door of lift " + this.id + " at floor " + this.currentFloor.floorNumber);
         this.doorStatus = "open";
-        // TODO Opening door animation
-        setTimeout(() => this.closeDoor(), 2500);
-        setTimeout(() => this.idle(), 5000);
+        this.doorsInterval = setInterval(() => this.updateDoorPositions(-1, 0), 30);
+        setTimeout(() => this.closeDoor(), 3500);
+        setTimeout(() => this.idle(), 5500);
     }
     closeDoor() {
         console.log(new Date().getTime() + ": Closing door");
-        // TODO Closing door animation
         this.doorStatus = "closed";
+        this.doorsInterval = setInterval(() => this.updateDoorPositions(1, 26.5), 30);
     }
     idle() {
+        console.log(new Date().getTime() + ": Going Idle");
         this.liftStatus = "idle";
+    }
+    updateDoorPositions(speed, target) {
+        var leftDoor = this.box.liftBoxDiv.childNodes[0];
+        var rightDoor = this.box.liftBoxDiv.childNodes[1];
+        if(target == leftDoor.width) {
+            clearInterval(this.doorsInterval);
+        } else {
+            leftDoor.width+=(0.5 * speed);
+            leftDoor.style.width = leftDoor.width + 'px';
+            rightDoor.width+=(0.5 * speed);
+            rightDoor.left-=(0.5 * speed);
+            rightDoor.style.left = rightDoor.left + 'px';
+            rightDoor.style.width = rightDoor.width + 'px';
+        }
     }
 }
 
@@ -104,7 +120,10 @@ class LiftBox {
         var leftDoor = document.createElement('div');
         var rightDoor = document.createElement('div');
         leftDoor.setAttribute("class", "leftDoor");
+        leftDoor.width = 26.5;
         rightDoor.setAttribute("class", "rightDoor");
+        rightDoor.width = 26.5;
+        rightDoor.left = 28.5;
         boxDiv.append(leftDoor, rightDoor);
         this.liftBoxDiv = boxDiv;
         this.xPosition = liftId * 100;
