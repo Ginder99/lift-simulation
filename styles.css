@@ -45,3 +45,9 @@
     align-items: center;
     rotate: 90deg;
 }
+
+.backDiv {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

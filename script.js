@@ -20,6 +20,16 @@ function initializeSimulator() {
         alert("Please specify no. of lifts and floors.");
         return;
     }
+    var backBtnDiv = document.createElement('div');
+    backBtnDiv.setAttribute("class", "backDiv");
+    var backButton = document.createElement('button');
+    backButton.innerHTML = 'Back';
+    backBtnDiv.append(backButton);
+    backButton.addEventListener('click', () => goBack());
+    building.append(backBtnDiv);
+    var floorsDiv = document.createElement('div');
+    floorsDiv.style.marginTop = '50px';
+    building.append(floorsDiv);
     inputDiv.style.display = "none";
     for(var i=floorCount-1; i>=0; i--) {
         var upBtn = document.createElement('button');
@@ -39,6 +49,17 @@ function initializeSimulator() {
     for(var i=0; i<liftCount; i++) {
         liftList.push(new Lift(i));
     }
+    building.style.display = "block";
+}
+
+function goBack() {
+    document.getElementById("floorCount").value = '';
+    document.getElementById("liftCount").value = '';
+    while (building.firstChild) {
+        building.removeChild(building.firstChild);
+    }
+    inputDiv.style.display = "block";
+    building.style.display = "none";
 }
 
 class Lift {
@@ -213,6 +234,6 @@ function findNearestLift(requestFloor, callback) {
 function addFloor(floorNumber, upBtn, downBtn) {
     var floor = new Floor(floorNumber, upBtn, downBtn);
     floorList.unshift(floor);
-    building.append(floor.floorDiv);
+    building.childNodes[1].append(floor.floorDiv);
     return floor;
 }
