@@ -16,8 +16,7 @@ function initializeSimulator() {
     building = document.getElementById("building");
     var floorCount = document.getElementById("floorCount").value;
     var liftCount = document.getElementById("liftCount").value;
-    if(floorCount=='' || liftCount == '') {
-        alert("Please specify no. of lifts and floors.");
+    if(!inputValidation(floorCount, liftCount)) {
         return;
     }
     var backBtnDiv = document.createElement('div');
@@ -50,6 +49,17 @@ function initializeSimulator() {
         liftList.push(new Lift(i));
     }
     building.style.display = "block";
+}
+
+function inputValidation(floorCount, liftCount) {
+    if(floorCount=='' || liftCount == '') {
+        alert("Please specify no. of lifts and floors.");
+        return false;
+    }
+    if(floorCount < 2 || liftCount < 1) {
+        alert("Please specify atleast 2 floors and 1 lift.");
+        return false;
+    }
 }
 
 function goBack() {
