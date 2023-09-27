@@ -60,6 +60,10 @@ function inputValidation(floorCount, liftCount) {
         alert("Please specify atleast 2 floors and 1 lift.");
         return false;
     }
+    if(floorCount > 10 || liftCount > 10) {
+        alert("Both Floors and lifts should not be more than 10.");
+        return false;
+    }
     return true;
 }
 
